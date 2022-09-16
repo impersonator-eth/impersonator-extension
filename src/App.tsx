@@ -16,11 +16,12 @@ import {
   Box,
   Button,
   Select,
-  Spinner,
 } from "@chakra-ui/react";
-import { networkInfo, chainIds } from "./networkInfo";
+import { SettingsIcon } from "@chakra-ui/icons";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { isAddress } from "@ethersproject/address";
+import { networkInfo, chainIds } from "./networkInfo";
+import Settings from "./components/Settings";
 
 function App() {
   const [isEnabled, setIsEnabled] = useState(true);
@@ -29,6 +30,7 @@ function App() {
   const [isAddressValid, setIsAddressValid] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [chainId, setChainId] = useState(chainIds[0]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentTab = async () => {
     const [tab] = await chrome.tabs.query({
@@ -165,67 +167,87 @@ function App() {
         </Heading>
         <Spacer flex="1" />
       </Flex>
-      <Container alignItems={"center"}>
-        <Center flexDir={"column"}>
-          <HStack mt="0.2rem" spacing={5}>
-            <Text fontSize="md">Enabled</Text>
-            <Switch
-              size="sm"
-              isChecked={isEnabled}
-              onChange={() => setIsEnabled((_isEnabled) => !_isEnabled)}
-            />
-          </HStack>
-          <Box mt="1.5rem">
-            <InputGroup>
-              <Input
-                placeholder="address / ens"
-                aria-label="address"
-                autoComplete="off"
-                minW="20rem"
-                pr="5.2rem"
-                rounded="lg"
-                value={displayAddress}
-                onChange={(e) => {
-                  const _displayAddress = e.target.value;
-                  setDisplayAddress(_displayAddress);
-                  setAddress(_displayAddress);
-                  setIsAddressValid(true); // remove invalid warning when user types again
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") updateAddress();
-                }}
-                isInvalid={!isAddressValid}
-              />
-              <InputRightElement w="4.5rem" mr="0.5rem">
-                <Button
+      <Container mt="0.4rem" alignItems={"center"}>
+        {!isSettingsOpen ? (
+          <>
+            <Flex>
+              <HStack spacing={5}>
+                <Text fontSize="md">Enabled</Text>
+                <Switch
                   size="sm"
-                  h="1.5rem"
-                  onClick={() => updateAddress()}
-                  isLoading={isUpdating}
-                >
-                  Update
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-          </Box>
-          <Select
-            mt="0.5rem"
-            px="0.2rem"
-            variant="filled"
-            rounded="lg"
-            _hover={{ cursor: "pointer" }}
-            value={chainId}
-            onChange={(e) => {
-              setChainId(parseInt(e.target.value));
-            }}
-          >
-            {chainIds.map((cid, i) => (
-              <option value={cid} key={i}>
-                {networkInfo[cid].name}
-              </option>
-            ))}
-          </Select>
-        </Center>
+                  isChecked={isEnabled}
+                  onChange={() => setIsEnabled((_isEnabled) => !_isEnabled)}
+                />
+              </HStack>
+              <Spacer />
+              <Button
+                size="sm"
+                onClick={() =>
+                  setIsSettingsOpen((_isSettingsOpen) => !_isSettingsOpen)
+                }
+              >
+                <SettingsIcon
+                  transition="900ms rotate ease-in-out"
+                  transform={isSettingsOpen ? "rotate(33deg)" : "rotate(0deg)"}
+                />
+              </Button>
+            </Flex>
+            <Center flexDir={"column"}>
+              <Box mt="1.5rem">
+                <InputGroup>
+                  <Input
+                    placeholder="address / ens"
+                    aria-label="address"
+                    autoComplete="off"
+                    minW="20rem"
+                    pr="5.2rem"
+                    rounded="lg"
+                    value={displayAddress}
+                    onChange={(e) => {
+                      const _displayAddress = e.target.value;
+                      setDisplayAddress(_displayAddress);
+                      setAddress(_displayAddress);
+                      setIsAddressValid(true); // remove invalid warning when user types again
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") updateAddress();
+                    }}
+                    isInvalid={!isAddressValid}
+                  />
+                  <InputRightElement w="4.5rem" mr="0.5rem">
+                    <Button
+                      size="sm"
+                      h="1.5rem"
+                      onClick={() => updateAddress()}
+                      isLoading={isUpdating}
+                    >
+                      Update
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
+              </Box>
+              <Select
+                mt="1rem"
+                px="0.2rem"
+                variant="filled"
+                rounded="lg"
+                _hover={{ cursor: "pointer" }}
+                value={chainId}
+                onChange={(e) => {
+                  setChainId(parseInt(e.target.value));
+                }}
+              >
+                {chainIds.map((cid, i) => (
+                  <option value={cid} key={i}>
+                    {networkInfo[cid].name}
+                  </option>
+                ))}
+              </Select>
+            </Center>
+          </>
+        ) : (
+          <Settings close={() => setIsSettingsOpen(false)} />
+        )}
       </Container>
     </>
   );
