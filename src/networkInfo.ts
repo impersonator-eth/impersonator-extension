@@ -1,16 +1,15 @@
-const networkInfo: { chainId: number; name: string }[] = [
-  {
-    chainId: 1,
+const networkInfo: { [chainId: number]: { name: string } } = {
+  1: {
     name: "ETH Mainnet",
   },
-  {
-    chainId: 10,
+  10: {
     name: "Optimism",
   },
-  {
-    chainId: 137,
+  137: {
     name: "Polygon",
   },
-];
+};
 
-export default networkInfo;
+const chainIds = Object.keys(networkInfo).map((e) => parseInt(e));
+
+export { networkInfo, chainIds };

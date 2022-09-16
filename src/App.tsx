@@ -17,25 +17,12 @@ import {
   Button,
   Select,
 } from "@chakra-ui/react";
-import networkInfo from "./networkInfo";
+import { networkInfo, chainIds } from "./networkInfo";
 
 function App() {
   const [isEnabled, setIsEnabled] = useState(true);
   const [address, setAddress] = useState<string>();
-  const [networkIndex, setNetworkIndex] = useState(0);
-
-  const getNetworkIndex = (chainId: number) => {
-    let _networkIndex = 0;
-
-    for (var i = 0; i < networkInfo.length; i++) {
-      if (networkInfo[i].chainId === chainId) {
-        _networkIndex = i;
-        break;
-      }
-    }
-
-    return _networkIndex;
-  };
+  const [chainId, setChainId] = useState(chainIds[0]);
 
   const currentTab = async () => {
     const [tab] = await chrome.tabs.query({
@@ -83,7 +70,7 @@ function App() {
 
       setAddress(_address);
       if (storedChainId) {
-        setNetworkIndex(getNetworkIndex(storedChainId));
+        setChainId(storedChainId);
       }
       setIsEnabled(storedIsEnabled ?? true);
     };
@@ -105,7 +92,6 @@ function App() {
     const updateChainId = async () => {
       if (chrome.tabs) {
         const tab = await currentTab();
-        const chainId = networkInfo[networkIndex].chainId;
 
         // send msg to content_script (inject.js)
         chrome.tabs.sendMessage(tab.id!, {
@@ -121,7 +107,7 @@ function App() {
     };
 
     updateChainId();
-  }, [networkIndex]);
+  }, [chainId]);
 
   return (
     <>
@@ -175,14 +161,14 @@ function App() {
             variant="filled"
             rounded="lg"
             _hover={{ cursor: "pointer" }}
-            value={networkIndex}
+            value={chainId}
             onChange={(e) => {
-              setNetworkIndex(parseInt(e.target.value));
+              setChainId(parseInt(e.target.value));
             }}
           >
-            {networkInfo.map((network, i) => (
-              <option value={i} key={i}>
-                {network.name}
+            {chainIds.map((cid, i) => (
+              <option value={cid} key={i}>
+                {networkInfo[cid].name}
               </option>
             ))}
           </Select>
