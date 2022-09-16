@@ -16,12 +16,18 @@ import {
   Box,
   Button,
   Select,
+  Spinner,
 } from "@chakra-ui/react";
 import { networkInfo, chainIds } from "./networkInfo";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
+import { isAddress } from "@ethersproject/address";
 
 function App() {
   const [isEnabled, setIsEnabled] = useState(true);
+  const [displayAddress, setDisplayAddress] = useState<string>("");
   const [address, setAddress] = useState<string>();
+  const [isAddressValid, setIsAddressValid] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [chainId, setChainId] = useState(chainIds[0]);
 
   const currentTab = async () => {
@@ -33,35 +39,68 @@ function App() {
   };
 
   const updateAddress = async () => {
+    setIsUpdating(true);
     const tab = await currentTab();
 
-    // send msg to content_script (inject.js)
-    chrome.tabs.sendMessage(tab.id!, {
-      type: "setAddress",
-      msg: { address },
-    });
+    let isValid = false;
+    let _address = address;
+    if (address) {
+      // Resolve ENS
+      const mainnetProvider = new StaticJsonRpcProvider(
+        networkInfo[1].rpcUrl[0]
+      );
+      const resolvedAddress = await mainnetProvider.resolveName(address);
+      if (resolvedAddress) {
+        setAddress(resolvedAddress);
+        _address = resolvedAddress;
+        isValid = true;
+      } else if (isAddress(address)) {
+        isValid = true;
+      }
+    }
+    setIsAddressValid(isValid);
 
-    // save to browser storage
-    await chrome.storage.sync.set({
-      address,
-    });
+    if (isValid) {
+      // send msg to content_script (inject.js)
+      chrome.tabs.sendMessage(tab.id!, {
+        type: "setAddress",
+        msg: { address: _address },
+      });
+
+      // save to browser storage
+      await chrome.storage.sync.set({
+        address: _address,
+      });
+      await chrome.storage.sync.set({
+        displayAddress,
+      });
+    }
+
+    setIsUpdating(false);
   };
 
   useEffect(() => {
     const init = async () => {
       const {
+        displayAddress: storedDisplayAddress,
         address: storedAddress,
         chainId: storedChainId,
         isEnabled: storedIsEnabled,
       } = (await chrome.storage.sync.get([
+        "displayAddress",
         "address",
         "chainId",
         "isEnabled",
       ])) as {
+        displayAddress: string | undefined;
         address: string | undefined;
         chainId: number | undefined;
         isEnabled: boolean | undefined;
       };
+
+      if (storedDisplayAddress) {
+        setDisplayAddress(storedDisplayAddress);
+      }
 
       const _address =
         storedAddress && storedAddress.length > 0
@@ -145,11 +184,25 @@ function App() {
                 minW="20rem"
                 pr="5.2rem"
                 rounded="lg"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                value={displayAddress}
+                onChange={(e) => {
+                  const _displayAddress = e.target.value;
+                  setDisplayAddress(_displayAddress);
+                  setAddress(_displayAddress);
+                  setIsAddressValid(true); // remove invalid warning when user types again
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") updateAddress();
+                }}
+                isInvalid={!isAddressValid}
               />
               <InputRightElement w="4.5rem" mr="0.5rem">
-                <Button size="sm" h="1.5rem" onClick={() => updateAddress()}>
+                <Button
+                  size="sm"
+                  h="1.5rem"
+                  onClick={() => updateAddress()}
+                  isLoading={isUpdating}
+                >
                   Update
                 </Button>
               </InputRightElement>
