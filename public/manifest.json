@@ -1,0 +1,33 @@
+{
+  "name": "Impersonator",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "description": "Impersonator",
+  "homepage_url": "https://impersonator.xyz",
+  "action": {
+    "default_title": "Impersonator",
+    "default_icon": {
+      "96": "impersonatorLogo.png"
+    },
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "96": "impersonatorLogo.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["file://*/*", "http://*/*", "https://*/*"],
+      "js": ["inject.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "permissions": ["activeTab", "tabs", "storage"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["static/js/impersonator.js"],
+      "matches": ["file://*/*", "http://*/*", "https://*/*"]
+    }
+  ]
+}
