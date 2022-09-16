@@ -9,12 +9,6 @@ type Window = Record<string, any>;
 
 const DEFAULT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-const chainIdToRPC: { [chainId: number]: string } = {
-  1: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
-  10: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
-  137: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
-};
-
 class ImpersonatorProvider extends EventEmitter {
   isImpersonator = true;
   isMetaMask = true;
@@ -23,10 +17,10 @@ class ImpersonatorProvider extends EventEmitter {
   private provider: Provider;
   private chainId: number;
 
-  constructor(chainId: number, address?: string) {
+  constructor(chainId: number, rpcUrl: string, address?: string) {
     super();
 
-    this.provider = new StaticJsonRpcProvider(chainIdToRPC[chainId]);
+    this.provider = new StaticJsonRpcProvider(rpcUrl);
     this.chainId = chainId;
     this.address = address && address.length > 0 ? address : DEFAULT_ADDRESS;
   }
@@ -36,14 +30,9 @@ class ImpersonatorProvider extends EventEmitter {
     this.emit("accountsChanged", [address]);
   };
 
-  setChainId = (chainId: number) => {
-    const rpc = chainIdToRPC[chainId];
-    if (!rpc) {
-      throw new Error("chainId not supported");
-    }
-
+  setChainId = (chainId: number, rpcUrl: string) => {
     this.chainId = chainId;
-    this.provider = new StaticJsonRpcProvider(rpc);
+    this.provider = new StaticJsonRpcProvider(rpcUrl);
     this.emit("chainChanged", chainId.toString(16));
   };
 
@@ -75,7 +64,16 @@ class ImpersonatorProvider extends EventEmitter {
       case "wallet_switchEthereumChain": {
         // @ts-ignore
         const chainId = Number(params[0].chainId as string);
-        this.setChainId(chainId);
+        // send message to content_script (inject.js) to fetch corresponding RPC
+        window.postMessage(
+          {
+            type: "setChainId",
+            msg: {
+              chainId,
+            },
+          },
+          "*"
+        );
         return null;
       }
       case "eth_sign": {
@@ -208,8 +206,13 @@ window.addEventListener("message", (e: any) => {
     case "init": {
       const address = e.data.msg.address as string | undefined;
       const chainId = e.data.msg.chainId as number;
+      const rpcUrl = e.data.msg.rpcUrl as string;
       try {
-        const impersonatedProvider = new ImpersonatorProvider(chainId, address);
+        const impersonatedProvider = new ImpersonatorProvider(
+          chainId,
+          rpcUrl,
+          address
+        );
 
         (window as Window).ethereum = impersonatedProvider;
       } catch (e) {
@@ -225,7 +228,8 @@ window.addEventListener("message", (e: any) => {
     }
     case "setChainId": {
       const chainId = e.data.msg.chainId as number;
-      (window as Window).ethereum.setChainId(chainId);
+      const rpcUrl = e.data.msg.rpcUrl as number;
+      (window as Window).ethereum.setChainId(chainId, rpcUrl);
       break;
     }
   }

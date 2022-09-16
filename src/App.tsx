@@ -20,16 +20,18 @@ import {
 import { SettingsIcon } from "@chakra-ui/icons";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { isAddress } from "@ethersproject/address";
-import { networkInfo, chainIds } from "./networkInfo";
 import Settings from "./components/Settings";
+import useNetwork from "./hooks/useNetwork";
 
 function App() {
+  const { networkInfo, chainIds } = useNetwork();
+
   const [isEnabled, setIsEnabled] = useState(true);
   const [displayAddress, setDisplayAddress] = useState<string>("");
   const [address, setAddress] = useState<string>();
   const [isAddressValid, setIsAddressValid] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [chainId, setChainId] = useState(chainIds[0]);
+  const [chainId, setChainId] = useState<number>();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentTab = async () => {
@@ -46,7 +48,7 @@ function App() {
 
     let isValid = false;
     let _address = address;
-    if (address) {
+    if (address && networkInfo && networkInfo[1]) {
       // Resolve ENS
       const mainnetProvider = new StaticJsonRpcProvider(
         networkInfo[1].rpcUrl[0]
@@ -232,16 +234,19 @@ function App() {
                 variant="filled"
                 rounded="lg"
                 _hover={{ cursor: "pointer" }}
+                placeholder="Select Network"
                 value={chainId}
                 onChange={(e) => {
                   setChainId(parseInt(e.target.value));
                 }}
               >
-                {chainIds.map((cid, i) => (
-                  <option value={cid} key={i}>
-                    {networkInfo[cid].name}
-                  </option>
-                ))}
+                {networkInfo &&
+                  chainIds &&
+                  chainIds.map((cid, i) => (
+                    <option value={cid} key={i}>
+                      {networkInfo[cid].name}
+                    </option>
+                  ))}
               </Select>
             </Center>
           </>
