@@ -67,7 +67,7 @@ class ImpersonatorProvider extends EventEmitter {
         // send message to content_script (inject.ts) to fetch corresponding RPC
         window.postMessage(
           {
-            type: "setChainId",
+            type: "i_setChainId",
             msg: {
               chainId,
             },

@@ -53,7 +53,7 @@ chrome.runtime.onMessage.addListener((msgObj) => {
   window.postMessage(msgObj, "*");
 });
 
-// Receive messages from inject impersonator.ts code
+// Receive messages from injected impersonator.ts code
 window.addEventListener("message", async (e) => {
   // only accept messages from us
   if (e.source !== window) {
@@ -65,7 +65,7 @@ window.addEventListener("message", async (e) => {
   }
 
   switch (e.data.type) {
-    case "setChainId": {
+    case "i_setChainId": {
       const chainId = e.data.msg.chainId;
       const { networksInfo } = (await chrome.storage.sync.get(
         "networksInfo"
