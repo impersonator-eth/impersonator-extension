@@ -4,7 +4,7 @@ import App from "./App";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "./theme";
 import "./index.css";
-import { NetworksProvider } from "./contexts/NetworksContext";
+import { NetworksProvider } from "@/contexts/NetworksContext";
 
 ReactDOM.render(
   <ChakraProvider theme={theme}>

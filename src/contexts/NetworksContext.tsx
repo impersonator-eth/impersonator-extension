@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { NetworksInfo } from "../types";
+import { NetworksInfo } from "@/types";
 
 type NetworkContextType = {
   networksInfo: NetworksInfo | undefined;

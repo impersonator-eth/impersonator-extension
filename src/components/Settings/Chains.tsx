@@ -9,10 +9,10 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { useNetworks } from "../../contexts/NetworksContext";
-import { NetworksInfo } from "../../types";
-import AddChain from "./AddChain";
 import { CloseIcon } from "@chakra-ui/icons";
+import { useNetworks } from "@/contexts/NetworksContext";
+import { NetworksInfo } from "@/types";
+import AddChain from "./AddChain";
 
 function Chain({
   chainId,

@@ -11,8 +11,8 @@ import {
   HStack,
   Text,
 } from "@chakra-ui/react";
-import { useNetworks } from "../../contexts/NetworksContext";
 import { ChevronLeftIcon } from "@chakra-ui/icons";
+import { useNetworks } from "@/contexts/NetworksContext";
 
 function AddChain({ back }: { back: () => void }) {
   const { setNetworksInfo } = useNetworks();

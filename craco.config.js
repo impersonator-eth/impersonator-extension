@@ -1,6 +1,7 @@
 const TerserPlugin = require("terser-webpack-plugin");
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 const Dotenv = require("dotenv-webpack");
+const path = require("path");
 
 module.exports = {
   webpack: {
@@ -58,6 +59,13 @@ module.exports = {
           new NodePolyfillPlugin(),
           new Dotenv(),
         ],
+        resolve: {
+          ...webpackConfig.resolve,
+          alias: {
+            ...webpackConfig.resolve.alias,
+            "@": path.resolve(__dirname, "src"),
+          },
+        },
       };
     },
   },

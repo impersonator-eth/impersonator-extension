@@ -20,8 +20,8 @@ import {
 import { SettingsIcon } from "@chakra-ui/icons";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { isAddress } from "@ethersproject/address";
-import Settings from "./components/Settings";
-import { useNetworks } from "./contexts/NetworksContext";
+import Settings from "@/components/Settings";
+import { useNetworks } from "@/contexts/NetworksContext";
 
 function App() {
   const { networksInfo, chainIds } = useNetworks();
