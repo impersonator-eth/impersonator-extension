@@ -1,4 +1,5 @@
 body {
   width: 360px;
   height: 320px;
+  max-height: 560px;
 }

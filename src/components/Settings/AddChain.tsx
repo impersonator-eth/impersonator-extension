@@ -1,0 +1,104 @@
+import { useState } from "react";
+import {
+  Button,
+  Center,
+  Box,
+  Input,
+  Heading,
+  Stack,
+  Flex,
+  Spacer,
+  HStack,
+  Text,
+} from "@chakra-ui/react";
+import useNetwork from "../../hooks/useNetwork";
+import { ChevronLeftIcon } from "@chakra-ui/icons";
+
+function AddChain({ back }: { back: () => void }) {
+  const { setNetworkInfo } = useNetwork();
+
+  const [chainName, setChainName] = useState<string>();
+  const [chainId, setChainId] = useState<string>();
+  const [rpc, setRpc] = useState<string>();
+
+  const addChain = () => {
+    if (chainName && chainId && rpc) {
+      setNetworkInfo((networkInfo) => {
+        return {
+          ...networkInfo,
+          [parseInt(chainId)]: {
+            name: chainName,
+            rpcUrl: [rpc],
+          },
+        };
+      });
+    }
+  };
+
+  return (
+    <>
+      <Flex>
+        <Spacer />
+        <Button size="sm" variant="ghost" onClick={() => back()}>
+          <HStack>
+            <ChevronLeftIcon fontSize="2xl" /> <Text>Back</Text>
+          </HStack>
+        </Button>
+      </Flex>
+      <Box>
+        <Heading size="md">Add Chain</Heading>
+        <Stack mt="1rem" spacing={2}>
+          <Input
+            placeholder="Name"
+            aria-label="Name"
+            autoComplete="off"
+            minW="20rem"
+            size="sm"
+            rounded="lg"
+            value={chainName}
+            onChange={(e) => {
+              setChainName(e.target.value);
+            }}
+          />
+          <Input
+            placeholder="Chain Id"
+            aria-label="Chain Id"
+            type="number"
+            autoComplete="off"
+            minW="20rem"
+            size="sm"
+            rounded="lg"
+            value={chainId}
+            onChange={(e) => {
+              setChainId(e.target.value);
+            }}
+          />
+          <Input
+            placeholder="RPC Url"
+            aria-label="RPC Url"
+            autoComplete="off"
+            minW="20rem"
+            size="sm"
+            rounded="lg"
+            value={rpc}
+            onChange={(e) => {
+              setRpc(e.target.value);
+            }}
+          />
+          <Center>
+            <Button
+              size="sm"
+              maxW="6rem"
+              colorScheme="blue"
+              onClick={() => addChain()}
+            >
+              Add Chain
+            </Button>
+          </Center>
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+export default AddChain;
