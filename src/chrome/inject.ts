@@ -1,5 +1,9 @@
+import { NetworkInfo } from "../types";
+
 const init = async () => {
-  const { isEnabled } = await chrome.storage.sync.get("isEnabled");
+  const { isEnabled } = (await chrome.storage.sync.get("isEnabled")) as {
+    isEnabled: boolean | undefined;
+  };
   if (!isEnabled) return;
 
   // inject impersonator.js into webpage
@@ -8,12 +12,19 @@ const init = async () => {
     script.setAttribute("type", "text/javascript");
     script.src = chrome.runtime.getURL("/static/js/impersonator.js");
     script.onload = async function () {
+      // @ts-ignore
       this.remove();
 
       // initialize web3 provider (window.ethereum)
-      const { address } = await chrome.storage.sync.get("address");
-      let { chainId } = await chrome.storage.sync.get("chainId");
-      const { networkInfo } = await chrome.storage.sync.get("networkInfo");
+      const { address } = (await chrome.storage.sync.get("address")) as {
+        address: string | undefined;
+      };
+      let { chainId } = (await chrome.storage.sync.get("chainId")) as {
+        chainId: number | undefined;
+      };
+      const { networkInfo } = (await chrome.storage.sync.get(
+        "networkInfo"
+      )) as { networkInfo: NetworkInfo | undefined };
 
       chainId = chainId ?? 1;
       if (networkInfo && networkInfo[chainId]) {
@@ -77,3 +88,6 @@ window.addEventListener("message", async (e) => {
 });
 
 init();
+
+// to remove isolated modules error
+export {};

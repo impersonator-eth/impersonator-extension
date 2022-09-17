@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-
-type NetworkInfo = {
-  [chainId: number]: { name: string; rpcUrl: string[] };
-};
+import { NetworkInfo } from "../types";
 
 function useNetwork() {
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo>();

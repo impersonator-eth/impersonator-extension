@@ -14,6 +14,7 @@ module.exports = {
             paths.appIndexJs,
           ].filter(Boolean),
           impersonator: "./src/chrome/impersonator.ts",
+          inject: "./src/chrome/inject.ts",
         },
         optimization: {
           ...webpackConfig.optimization,

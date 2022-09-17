@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["file://*/*", "http://*/*", "https://*/*"],
-      "js": ["inject.js"],
+      "js": ["static/js/inject.js"],
       "run_at": "document_start",
       "all_frames": true
     }
