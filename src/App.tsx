@@ -21,10 +21,10 @@ import { SettingsIcon } from "@chakra-ui/icons";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { isAddress } from "@ethersproject/address";
 import Settings from "./components/Settings";
-import useNetwork from "./hooks/useNetwork";
+import { useNetworks } from "./contexts/NetworksContext";
 
 function App() {
-  const { networkInfo, chainIds } = useNetwork();
+  const { networksInfo, chainIds } = useNetworks();
 
   const [isEnabled, setIsEnabled] = useState(true);
   const [displayAddress, setDisplayAddress] = useState<string>("");
@@ -48,10 +48,10 @@ function App() {
 
     let isValid = false;
     let _address = address;
-    if (address && networkInfo && networkInfo[1]) {
+    if (address && networksInfo && networksInfo[1]) {
       // Resolve ENS
       const mainnetProvider = new StaticJsonRpcProvider(
-        networkInfo[1].rpcUrl[0]
+        networksInfo[1].rpcUrl[0]
       );
       const resolvedAddress = await mainnetProvider.resolveName(address);
       if (resolvedAddress) {
@@ -240,11 +240,11 @@ function App() {
                   setChainId(parseInt(e.target.value));
                 }}
               >
-                {networkInfo &&
+                {networksInfo &&
                   chainIds &&
                   chainIds.map((cid, i) => (
                     <option value={cid} key={i}>
-                      {networkInfo[cid].name}
+                      {networksInfo[cid].name}
                     </option>
                   ))}
               </Select>

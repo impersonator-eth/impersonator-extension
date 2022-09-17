@@ -11,11 +11,11 @@ import {
   HStack,
   Text,
 } from "@chakra-ui/react";
-import useNetwork from "../../hooks/useNetwork";
+import { useNetworks } from "../../contexts/NetworksContext";
 import { ChevronLeftIcon } from "@chakra-ui/icons";
 
 function AddChain({ back }: { back: () => void }) {
-  const { setNetworkInfo } = useNetwork();
+  const { setNetworksInfo } = useNetworks();
 
   const [chainName, setChainName] = useState<string>();
   const [chainId, setChainId] = useState<string>();
@@ -26,9 +26,10 @@ function AddChain({ back }: { back: () => void }) {
     setIsAdding(true);
 
     if (chainName && chainId && rpc) {
-      setNetworkInfo((networkInfo) => {
+      setNetworksInfo((networksInfo) => {
+        back();
         return {
-          ...networkInfo,
+          ...networksInfo,
           [parseInt(chainId)]: {
             name: chainName,
             rpcUrl: [rpc],

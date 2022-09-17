@@ -1,4 +1,4 @@
-import { NetworkInfo } from "../types";
+import { NetworksInfo } from "../types";
 
 const init = async () => {
   const { isEnabled } = (await chrome.storage.sync.get("isEnabled")) as {
@@ -22,19 +22,19 @@ const init = async () => {
       let { chainId } = (await chrome.storage.sync.get("chainId")) as {
         chainId: number | undefined;
       };
-      const { networkInfo } = (await chrome.storage.sync.get(
-        "networkInfo"
-      )) as { networkInfo: NetworkInfo | undefined };
+      const { networksInfo } = (await chrome.storage.sync.get(
+        "networksInfo"
+      )) as { networksInfo: NetworksInfo | undefined };
 
       chainId = chainId ?? 1;
-      if (networkInfo && networkInfo[chainId]) {
+      if (networksInfo && networksInfo[chainId]) {
         window.postMessage(
           {
             type: "init",
             msg: {
               address,
               chainId,
-              rpcUrl: networkInfo[chainId].rpcUrl[0],
+              rpcUrl: networksInfo[chainId].rpcUrl[0],
             },
           },
           "*"
@@ -68,8 +68,8 @@ window.addEventListener("message", async (e) => {
   switch (e.data.type) {
     case "setChainId": {
       const chainId = e.data.msg.chainId;
-      const { networkInfo } = await chrome.storage.sync.get("networkInfo");
-      const rpcUrl = networkInfo[chainId].rpcUrl[0];
+      const { networksInfo } = await chrome.storage.sync.get("networksInfo");
+      const rpcUrl = networksInfo[chainId].rpcUrl[0];
 
       // send message to setChainId with RPC
       window.postMessage(

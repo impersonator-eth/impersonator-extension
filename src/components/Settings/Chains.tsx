@@ -9,8 +9,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import useNetwork from "../../hooks/useNetwork";
-import { NetworkInfo } from "../../types";
+import { useNetworks } from "../../contexts/NetworksContext";
+import { NetworksInfo } from "../../types";
 import AddChain from "./AddChain";
 import { CloseIcon } from "@chakra-ui/icons";
 
@@ -19,7 +19,7 @@ function Chain({
   network,
 }: {
   chainId: number;
-  network: NetworkInfo[number];
+  network: NetworksInfo[number];
 }) {
   return (
     <Box
@@ -48,7 +48,7 @@ function Chain({
 }
 
 function Chains({ close }: { close: () => void }) {
-  const { networkInfo, chainIds } = useNetwork();
+  const { networksInfo, chainIds } = useNetworks();
 
   const [tab, setTab] = useState<React.ReactElement>();
 
@@ -64,10 +64,10 @@ function Chains({ close }: { close: () => void }) {
       </Flex>
       <Center flexDir={"column"}>
         <Stack mt="1rem" pb="2rem" spacing={4}>
-          {networkInfo &&
+          {networksInfo &&
             chainIds &&
             chainIds.map((cid, i) => (
-              <Chain key={i} chainId={cid} network={networkInfo[cid]} />
+              <Chain key={i} chainId={cid} network={networksInfo[cid]} />
             ))}
           <Button
             onClick={() => setTab(<AddChain back={() => setTab(undefined)} />)}
