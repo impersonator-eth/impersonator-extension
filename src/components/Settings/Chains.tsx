@@ -15,11 +15,11 @@ import { NetworksInfo } from "@/types";
 import AddChain from "./AddChain";
 
 function Chain({
-  chainId,
+  chainName,
   network,
 }: {
-  chainId: number;
-  network: NetworksInfo[number];
+  chainName: string;
+  network: NetworksInfo[string];
 }) {
   return (
     <Box
@@ -31,16 +31,16 @@ function Chain({
     >
       <HStack>
         <Text fontWeight="bold">Name: </Text>
-        <Text>{network.name}</Text>
+        <Text>{chainName}</Text>
       </HStack>
       <HStack>
         <Text fontWeight="bold">ChainId: </Text>
-        <Text>{chainId}</Text>
+        <Text>{network.chainId}</Text>
       </HStack>
       <HStack>
         <Text fontWeight="bold">RPC: </Text>
         <Text overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis">
-          {network.rpcUrl.length > 1 ? "Multiple RPCs" : network.rpcUrl[0]}
+          {network.rpcUrl}
         </Text>
       </HStack>
     </Box>
@@ -48,7 +48,7 @@ function Chain({
 }
 
 function Chains({ close }: { close: () => void }) {
-  const { networksInfo, chainIds } = useNetworks();
+  const { networksInfo } = useNetworks();
 
   const [tab, setTab] = useState<React.ReactElement>();
 
@@ -65,9 +65,12 @@ function Chains({ close }: { close: () => void }) {
       <Center flexDir={"column"}>
         <Stack mt="1rem" pb="2rem" spacing={4}>
           {networksInfo &&
-            chainIds &&
-            chainIds.map((cid, i) => (
-              <Chain key={i} chainId={cid} network={networksInfo[cid]} />
+            Object.keys(networksInfo).map((chainName, i) => (
+              <Chain
+                key={i}
+                chainName={chainName}
+                network={networksInfo[chainName]}
+              />
             ))}
           <Button
             onClick={() => setTab(<AddChain back={() => setTab(undefined)} />)}

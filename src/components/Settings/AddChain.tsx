@@ -15,27 +15,32 @@ import { ChevronLeftIcon } from "@chakra-ui/icons";
 import { useNetworks } from "@/contexts/NetworksContext";
 
 function AddChain({ back }: { back: () => void }) {
-  const { setNetworksInfo } = useNetworks();
+  const { networksInfo, setNetworksInfo } = useNetworks();
 
   const [chainName, setChainName] = useState<string>();
   const [chainId, setChainId] = useState<string>();
   const [rpc, setRpc] = useState<string>();
   const [isAdding, setIsAdding] = useState(false);
+  const [isChainNameNotUnique, setIsChainNameNotUnique] = useState(false);
 
   const addChain = () => {
     setIsAdding(true);
 
-    if (chainName && chainId && rpc) {
-      setNetworksInfo((networksInfo) => {
-        back();
-        return {
-          ...networksInfo,
-          [parseInt(chainId)]: {
-            name: chainName,
-            rpcUrl: [rpc],
-          },
-        };
-      });
+    if (chainName && chainId && rpc && networksInfo) {
+      if (networksInfo[chainName]) {
+        setIsChainNameNotUnique(true);
+      } else {
+        setNetworksInfo((_networksInfo) => {
+          back();
+          return {
+            ..._networksInfo,
+            [chainName]: {
+              chainId: parseInt(chainId),
+              rpcUrl: rpc,
+            },
+          };
+        });
+      }
     }
 
     setIsAdding(false);
@@ -64,7 +69,11 @@ function AddChain({ back }: { back: () => void }) {
             value={chainName}
             onChange={(e) => {
               setChainName(e.target.value);
+              if (isChainNameNotUnique) {
+                setIsChainNameNotUnique(false); // remove invalid warning when user types again
+              }
             }}
+            isInvalid={isChainNameNotUnique}
           />
           <Input
             placeholder="Chain Id"

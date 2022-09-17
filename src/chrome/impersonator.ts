@@ -64,7 +64,7 @@ class ImpersonatorProvider extends EventEmitter {
       case "wallet_switchEthereumChain": {
         // @ts-ignore
         const chainId = Number(params[0].chainId as string);
-        // send message to content_script (inject.js) to fetch corresponding RPC
+        // send message to content_script (inject.ts) to fetch corresponding RPC
         window.postMessage(
           {
             type: "setChainId",
@@ -228,7 +228,7 @@ window.addEventListener("message", (e: any) => {
     }
     case "setChainId": {
       const chainId = e.data.msg.chainId as number;
-      const rpcUrl = e.data.msg.rpcUrl as number;
+      const rpcUrl = e.data.msg.rpcUrl as string;
       (window as Window).ethereum.setChainId(chainId, rpcUrl);
       break;
     }

@@ -6,18 +6,15 @@ type NetworkContextType = {
   setNetworksInfo: React.Dispatch<
     React.SetStateAction<NetworksInfo | undefined>
   >;
-  chainIds: number[] | undefined;
 };
 
 export const NetworksContext = createContext<NetworkContextType>({
   networksInfo: undefined,
   setNetworksInfo: () => {},
-  chainIds: undefined,
 });
 
 export const NetworksProvider: React.FunctionComponent = ({ children }) => {
   const [networksInfo, setNetworksInfo] = useState<NetworksInfo>();
-  const [chainIds, setChainIds] = useState<number[]>();
 
   useEffect(() => {
     const fetch = async () => {
@@ -42,7 +39,6 @@ export const NetworksProvider: React.FunctionComponent = ({ children }) => {
     };
 
     if (networksInfo) {
-      setChainIds(Object.keys(networksInfo).map((e) => parseInt(e)));
       saveToBrowser();
     }
   }, [networksInfo]);
@@ -52,7 +48,6 @@ export const NetworksProvider: React.FunctionComponent = ({ children }) => {
       value={{
         networksInfo,
         setNetworksInfo,
-        chainIds,
       }}
     >
       {children}

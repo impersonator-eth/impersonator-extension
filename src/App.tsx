@@ -24,14 +24,14 @@ import Settings from "@/components/Settings";
 import { useNetworks } from "@/contexts/NetworksContext";
 
 function App() {
-  const { networksInfo, chainIds } = useNetworks();
+  const { networksInfo } = useNetworks();
 
   const [isEnabled, setIsEnabled] = useState(true);
   const [displayAddress, setDisplayAddress] = useState<string>("");
   const [address, setAddress] = useState<string>();
   const [isAddressValid, setIsAddressValid] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [chainId, setChainId] = useState<number>();
+  const [chainName, setChainName] = useState<string>();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentTab = async () => {
@@ -48,24 +48,33 @@ function App() {
 
     let isValid = false;
     let _address = address;
-    if (address && networksInfo && networksInfo[1]) {
-      // Resolve ENS
-      const mainnetProvider = new StaticJsonRpcProvider(
-        networksInfo[1].rpcUrl[0]
-      );
-      const resolvedAddress = await mainnetProvider.resolveName(address);
-      if (resolvedAddress) {
-        setAddress(resolvedAddress);
-        _address = resolvedAddress;
-        isValid = true;
-      } else if (isAddress(address)) {
-        isValid = true;
+    if (address && networksInfo) {
+      // get mainnet rpc (if exists)
+      let mainnetRPC: string | undefined;
+      for (const chainName of Object.keys(networksInfo)) {
+        if (networksInfo[chainName].chainId === 1) {
+          mainnetRPC = networksInfo[chainName].rpcUrl;
+          break;
+        }
+      }
+
+      if (mainnetRPC) {
+        // Resolve ENS
+        const mainnetProvider = new StaticJsonRpcProvider(mainnetRPC);
+        const resolvedAddress = await mainnetProvider.resolveName(address);
+        if (resolvedAddress) {
+          setAddress(resolvedAddress);
+          _address = resolvedAddress;
+          isValid = true;
+        } else if (isAddress(address)) {
+          isValid = true;
+        }
       }
     }
     setIsAddressValid(isValid);
 
     if (isValid) {
-      // send msg to content_script (inject.js)
+      // send msg to content_script (inject.ts)
       chrome.tabs.sendMessage(tab.id!, {
         type: "setAddress",
         msg: { address: _address },
@@ -88,17 +97,17 @@ function App() {
       const {
         displayAddress: storedDisplayAddress,
         address: storedAddress,
-        chainId: storedChainId,
+        chainName: storedChainName,
         isEnabled: storedIsEnabled,
       } = (await chrome.storage.sync.get([
         "displayAddress",
         "address",
-        "chainId",
+        "chainName",
         "isEnabled",
       ])) as {
         displayAddress: string | undefined;
         address: string | undefined;
-        chainId: number | undefined;
+        chainName: string | undefined;
         isEnabled: boolean | undefined;
       };
 
@@ -112,8 +121,8 @@ function App() {
           : "0x0000000000000000000000000000000000000000";
 
       setAddress(_address);
-      if (storedChainId) {
-        setChainId(storedChainId);
+      if (storedChainName) {
+        setChainName(storedChainName);
       }
       setIsEnabled(storedIsEnabled ?? true);
     };
@@ -133,24 +142,25 @@ function App() {
 
   useUpdateEffect(() => {
     const updateChainId = async () => {
-      if (chrome.tabs) {
+      if (chrome.tabs && networksInfo && chainName) {
         const tab = await currentTab();
+        const chainId = networksInfo[chainName].chainId;
 
-        // send msg to content_script (inject.js)
+        // send msg to content_script (inject.ts)
         chrome.tabs.sendMessage(tab.id!, {
           type: "setChainId",
-          msg: { chainId },
+          msg: { chainId, rpcUrl: networksInfo[chainName].rpcUrl },
         });
 
         // save to browser storage
         await chrome.storage.sync.set({
-          chainId,
+          chainName,
         });
       }
     };
 
     updateChainId();
-  }, [chainId]);
+  }, [chainName, networksInfo]);
 
   return (
     <>
@@ -209,7 +219,9 @@ function App() {
                       const _displayAddress = e.target.value;
                       setDisplayAddress(_displayAddress);
                       setAddress(_displayAddress);
-                      setIsAddressValid(true); // remove invalid warning when user types again
+                      if (isAddressValid) {
+                        setIsAddressValid(true); // remove invalid warning when user types again
+                      }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") updateAddress();
@@ -235,16 +247,15 @@ function App() {
                 rounded="lg"
                 _hover={{ cursor: "pointer" }}
                 placeholder="Select Network"
-                value={chainId}
+                value={chainName}
                 onChange={(e) => {
-                  setChainId(parseInt(e.target.value));
+                  setChainName(e.target.value);
                 }}
               >
                 {networksInfo &&
-                  chainIds &&
-                  chainIds.map((cid, i) => (
-                    <option value={cid} key={i}>
-                      {networksInfo[cid].name}
+                  Object.keys(networksInfo).map((chainName, i) => (
+                    <option value={chainName} key={i}>
+                      {chainName}
                     </option>
                   ))}
               </Select>

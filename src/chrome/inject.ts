@@ -19,22 +19,21 @@ const init = async () => {
       const { address } = (await chrome.storage.sync.get("address")) as {
         address: string | undefined;
       };
-      let { chainId } = (await chrome.storage.sync.get("chainId")) as {
-        chainId: number | undefined;
+      let { chainName } = (await chrome.storage.sync.get("chainName")) as {
+        chainName: string | undefined;
       };
       const { networksInfo } = (await chrome.storage.sync.get(
         "networksInfo"
       )) as { networksInfo: NetworksInfo | undefined };
 
-      chainId = chainId ?? 1;
-      if (networksInfo && networksInfo[chainId]) {
+      if (networksInfo && chainName && networksInfo[chainName]) {
         window.postMessage(
           {
             type: "init",
             msg: {
               address,
-              chainId,
-              rpcUrl: networksInfo[chainId].rpcUrl[0],
+              chainId: networksInfo[chainName].chainId,
+              rpcUrl: networksInfo[chainName].rpcUrl,
             },
           },
           "*"
@@ -68,9 +67,25 @@ window.addEventListener("message", async (e) => {
   switch (e.data.type) {
     case "setChainId": {
       const chainId = e.data.msg.chainId;
-      const { networksInfo } = await chrome.storage.sync.get("networksInfo");
-      const rpcUrl = networksInfo[chainId].rpcUrl[0];
+      const { networksInfo } = (await chrome.storage.sync.get(
+        "networksInfo"
+      )) as { networksInfo: NetworksInfo | undefined };
 
+      if (!networksInfo) {
+        break;
+      }
+
+      let rpcUrl: string | undefined;
+      for (const chainName of Object.keys(networksInfo)) {
+        if (networksInfo[chainName].chainId === chainId) {
+          rpcUrl = networksInfo[chainName].rpcUrl;
+          break;
+        }
+      }
+
+      if (!rpcUrl) {
+        break;
+      }
       // send message to setChainId with RPC
       window.postMessage(
         {
