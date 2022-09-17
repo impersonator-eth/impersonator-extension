@@ -20,8 +20,11 @@ function AddChain({ back }: { back: () => void }) {
   const [chainName, setChainName] = useState<string>();
   const [chainId, setChainId] = useState<string>();
   const [rpc, setRpc] = useState<string>();
+  const [isAdding, setIsAdding] = useState(false);
 
   const addChain = () => {
+    setIsAdding(true);
+
     if (chainName && chainId && rpc) {
       setNetworkInfo((networkInfo) => {
         return {
@@ -33,6 +36,8 @@ function AddChain({ back }: { back: () => void }) {
         };
       });
     }
+
+    setIsAdding(false);
   };
 
   return (
@@ -91,6 +96,7 @@ function AddChain({ back }: { back: () => void }) {
               maxW="6rem"
               colorScheme="blue"
               onClick={() => addChain()}
+              isLoading={isAdding}
             >
               Add Chain
             </Button>
