@@ -53,13 +53,15 @@ function App() {
 
     let isValid = false;
     let _address = address;
-    if (address && networksInfo) {
+    if (address) {
       // get mainnet rpc (if exists)
       let mainnetRPC: string | undefined;
-      for (const chainName of Object.keys(networksInfo)) {
-        if (networksInfo[chainName].chainId === 1) {
-          mainnetRPC = networksInfo[chainName].rpcUrl;
-          break;
+      if (networksInfo) {
+        for (const chainName of Object.keys(networksInfo)) {
+          if (networksInfo[chainName].chainId === 1) {
+            mainnetRPC = networksInfo[chainName].rpcUrl;
+            break;
+          }
         }
       }
 
@@ -173,18 +175,16 @@ function App() {
       );
     };
 
-    if (chrome.storage) {
-      init();
-    }
+    init();
   }, []);
 
-  useUpdateEffect(() => {
-    if (chrome.storage) {
-      chrome.storage.sync.set({
-        isEnabled,
-      });
-    }
+  useEffect(() => {
+    chrome.storage.sync.set({
+      isEnabled,
+    });
+  }, [isEnabled]);
 
+  useUpdateEffect(() => {
     if (isEnabled && chainName && !isInjected) {
       setReloadRequired(true);
     }
@@ -192,7 +192,7 @@ function App() {
 
   useUpdateEffect(() => {
     const updateChainId = async () => {
-      if (chrome.tabs && networksInfo && chainName) {
+      if (networksInfo && chainName) {
         const tab = await currentTab();
         const chainId = networksInfo[chainName].chainId;
 
