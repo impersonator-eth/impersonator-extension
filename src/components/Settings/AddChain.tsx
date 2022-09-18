@@ -27,8 +27,8 @@ function AddChain({ back }: { back: () => void }) {
   const addChain = () => {
     setIsBtnLoading(true);
 
-    if (chainName && chainId && rpc && networksInfo) {
-      if (networksInfo[chainName]) {
+    if (chainName && chainId && rpc) {
+      if (networksInfo && networksInfo[chainName]) {
         setIsChainNameNotUnique(true);
       } else {
         setNetworksInfo((_networksInfo) => {

@@ -58,20 +58,60 @@ class ImpersonatorProvider extends EventEmitter {
       case "net_version": {
         return this.chainId;
       }
+      case "eth_chainId": {
+        return hexValue(this.chainId);
+      }
       case "wallet_addEthereumChain":
       case "wallet_switchEthereumChain": {
         // @ts-ignore
         const chainId = Number(params[0].chainId as string);
-        // send message to content_script (inject.ts) to fetch corresponding RPC
-        window.postMessage(
-          {
-            type: "i_setChainId",
-            msg: {
-              chainId,
+
+        const setChainIdPromise = new Promise((resolve, reject) => {
+          // send message to content_script (inject.ts) to fetch corresponding RPC
+          window.postMessage(
+            {
+              type: "i_switchEthereumChain",
+              msg: {
+                chainId,
+              },
             },
-          },
-          "*"
-        );
+            "*"
+          );
+
+          // receive from content_script (inject.ts)
+          const controller = new AbortController();
+          window.addEventListener(
+            "message",
+            (e: any) => {
+              // only accept messages from us
+              if (e.source !== window) {
+                return;
+              }
+
+              if (!e.data.type) {
+                return;
+              }
+
+              switch (e.data.type) {
+                case "switchEthereumChain": {
+                  const chainId = e.data.msg.chainId as number;
+                  const rpcUrl = e.data.msg.rpcUrl as string;
+                  (
+                    (window as Window).ethereum as ImpersonatorProvider
+                  ).setChainId(chainId, rpcUrl);
+                  // remove this listener as we already have a listener for "message" and don't want duplicates
+                  controller.abort();
+
+                  resolve(null);
+                  break;
+                }
+              }
+            },
+            { signal: controller.signal } as AddEventListenerOptions
+          );
+        });
+
+        await setChainIdPromise;
         return null;
       }
       case "eth_sign": {
@@ -90,10 +130,6 @@ class ImpersonatorProvider extends EventEmitter {
       }
       case "eth_blockNumber": {
         return await this.provider.getBlockNumber();
-      }
-      case "eth_chainId": {
-        const result = await this.provider.getNetwork();
-        return hexValue(result.chainId);
       }
       case "eth_getBalance": {
         // @ts-ignore

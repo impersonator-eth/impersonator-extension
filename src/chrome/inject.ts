@@ -112,7 +112,7 @@ window.addEventListener("message", async (e) => {
   }
 
   switch (e.data.type) {
-    case "i_setChainId": {
+    case "i_switchEthereumChain": {
       const chainId = e.data.msg.chainId as number;
       const { networksInfo } = (await chrome.storage.sync.get(
         "networksInfo"
@@ -137,10 +137,10 @@ window.addEventListener("message", async (e) => {
       }
 
       store.chainName = chainName!;
-      // send message to setChainId with RPC, in impersonator.ts
+      // send message to switchEthereumChain with RPC, in impersonator.ts
       window.postMessage(
         {
-          type: "setChainId",
+          type: "switchEthereumChain",
           msg: {
             chainId,
             rpcUrl,
