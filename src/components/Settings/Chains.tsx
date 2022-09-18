@@ -13,13 +13,16 @@ import { CloseIcon } from "@chakra-ui/icons";
 import { useNetworks } from "@/contexts/NetworksContext";
 import { NetworksInfo } from "@/types";
 import AddChain from "./AddChain";
+import EditChain from "./EditChain";
 
 function Chain({
   chainName,
   network,
+  openEditChain,
 }: {
   chainName: string;
   network: NetworksInfo[string];
+  openEditChain: () => void;
 }) {
   return (
     <Box
@@ -28,6 +31,8 @@ function Chain({
       border="1px solid white"
       fontSize="md"
       rounded={"md"}
+      onClick={() => openEditChain()}
+      _hover={{ cursor: "pointer" }}
     >
       <HStack>
         <Text fontWeight="bold">Name: </Text>
@@ -70,6 +75,14 @@ function Chains({ close }: { close: () => void }) {
                 key={i}
                 chainName={chainName}
                 network={networksInfo[chainName]}
+                openEditChain={() =>
+                  setTab(
+                    <EditChain
+                      back={() => setTab(undefined)}
+                      chainName={chainName}
+                    />
+                  )
+                }
               />
             ))}
           <Button
