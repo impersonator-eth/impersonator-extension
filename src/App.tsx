@@ -58,19 +58,23 @@ function App() {
         }
       }
 
-      if (mainnetRPC) {
-        // Resolve ENS
-        const mainnetProvider = new StaticJsonRpcProvider(mainnetRPC);
-        const resolvedAddress = await mainnetProvider.resolveName(address);
-        if (resolvedAddress) {
-          setAddress(resolvedAddress);
-          _address = resolvedAddress;
-          isValid = true;
-        } else if (isAddress(address)) {
-          isValid = true;
-        }
+      if (!mainnetRPC) {
+        // fallback public rpc
+        mainnetRPC = "https://rpc.ankr.com/eth";
+      }
+
+      // Resolve ENS
+      const mainnetProvider = new StaticJsonRpcProvider(mainnetRPC);
+      const resolvedAddress = await mainnetProvider.resolveName(address);
+      if (resolvedAddress) {
+        setAddress(resolvedAddress);
+        _address = resolvedAddress;
+        isValid = true;
+      } else if (isAddress(address)) {
+        isValid = true;
       }
     }
+
     setIsAddressValid(isValid);
 
     if (isValid) {
