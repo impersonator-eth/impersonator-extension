@@ -31,7 +31,7 @@ class ImpersonatorProvider extends EventEmitter {
   setChainId = (chainId: number, rpcUrl: string) => {
     this.chainId = chainId;
     this.provider = new StaticJsonRpcProvider(rpcUrl);
-    this.emit("chainChanged", chainId.toString(16));
+    this.emit("chainChanged", hexValue(chainId));
   };
 
   request(request: { method: string; params?: Array<any> }): Promise<any> {
