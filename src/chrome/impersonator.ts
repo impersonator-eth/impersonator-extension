@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Provider, StaticJsonRpcProvider } from "@ethersproject/providers";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { hexValue } from "@ethersproject/bytes";
 import { Logger } from "@ethersproject/logger";
 
@@ -12,7 +12,7 @@ class ImpersonatorProvider extends EventEmitter {
   isMetaMask = true;
 
   private address: string;
-  private provider: Provider;
+  private provider: StaticJsonRpcProvider;
   private chainId: number;
 
   constructor(chainId: number, rpcUrl: string, address: string) {
@@ -124,7 +124,7 @@ class ImpersonatorProvider extends EventEmitter {
         return throwUnsupported("personal_sign not supported");
       }
       case "eth_sendTransaction": {
-        return throwUnsupported("eth_sendTransaction not supported");
+        break;
       }
       // unchanged from Eip1193Bridge
       case "eth_gasPrice": {
@@ -219,13 +219,9 @@ class ImpersonatorProvider extends EventEmitter {
         break;
     }
 
-    // If our provider supports send, maybe it can do a better job?
-    if ((this as any).provider.send) {
-      const result = await (this as any).provider.send(method, params);
-      return coerce(result);
-    }
-
-    return throwUnsupported(`unsupported method: ${method}`);
+    // @ts-ignore
+    const result = await this.provider.send(method, params);
+    return coerce(result);
   }
 }
 
