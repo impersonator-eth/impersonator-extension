@@ -7,8 +7,6 @@ const logger = new Logger("ethers/5.7.0");
 
 type Window = Record<string, any>;
 
-const DEFAULT_ADDRESS = "0x0000000000000000000000000000000000000000";
-
 class ImpersonatorProvider extends EventEmitter {
   isImpersonator = true;
   isMetaMask = true;

@@ -7,15 +7,20 @@ type NetworkContextType = {
   setNetworksInfo: React.Dispatch<
     React.SetStateAction<NetworksInfo | undefined>
   >;
+  reloadRequired: boolean;
+  setReloadRequired: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const NetworksContext = createContext<NetworkContextType>({
   networksInfo: undefined,
   setNetworksInfo: () => {},
+  reloadRequired: false,
+  setReloadRequired: () => {},
 });
 
 export const NetworksProvider: React.FunctionComponent = ({ children }) => {
   const [networksInfo, setNetworksInfo] = useState<NetworksInfo>();
+  const [reloadRequired, setReloadRequired] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -47,6 +52,8 @@ export const NetworksProvider: React.FunctionComponent = ({ children }) => {
       value={{
         networksInfo,
         setNetworksInfo,
+        reloadRequired,
+        setReloadRequired,
       }}
     >
       {children}

@@ -16,6 +16,10 @@ import {
   Box,
   Button,
   Select,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { SettingsIcon } from "@chakra-ui/icons";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
@@ -24,9 +28,10 @@ import Settings from "@/components/Settings";
 import { useNetworks } from "@/contexts/NetworksContext";
 
 function App() {
-  const { networksInfo } = useNetworks();
+  const { networksInfo, reloadRequired, setReloadRequired } = useNetworks();
 
   const [isEnabled, setIsEnabled] = useState(true);
+  const [isInjected, setIsInjected] = useState(false); // isEnabled can change by toggle, but this tells if actually injected
   const [displayAddress, setDisplayAddress] = useState<string>("");
   const [address, setAddress] = useState<string>();
   const [isAddressValid, setIsAddressValid] = useState(true);
@@ -130,8 +135,8 @@ function App() {
       }
       setIsEnabled(storedIsEnabled ?? true);
 
-      // fetch `store` from content_script (inject.ts) if provider already injected
-      // in this current tab, set address & chain
+      // fetch `store` from content_script (inject.ts) if provider already injected in this current tab,
+      // set address & chain
       const tab = await currentTab();
       chrome.tabs.sendMessage(
         tab.id!,
@@ -143,9 +148,16 @@ function App() {
           displayAddress: string;
           chainName: string;
         }) => {
-          setAddress(store.address);
-          setDisplayAddress(store.displayAddress);
-          setChainName(store.chainName);
+          if (store.address && store.address.length > 0) {
+            setAddress(store.address);
+          }
+          if (store.displayAddress && store.displayAddress.length > 0) {
+            setDisplayAddress(store.displayAddress);
+          }
+          if (store.chainName && store.chainName.length > 0) {
+            setChainName(store.chainName);
+            setIsInjected(true);
+          }
         }
       );
     };
@@ -160,6 +172,16 @@ function App() {
       chrome.storage.sync.set({
         isEnabled,
       });
+    }
+
+    console.log({
+      isEnabled,
+      chainName,
+      isInjected,
+    });
+
+    if (isEnabled && chainName && !isInjected) {
+      setReloadRequired(true);
     }
   }, [isEnabled]);
 
@@ -185,6 +207,13 @@ function App() {
     updateChainId();
   }, [chainName, networksInfo]);
 
+  useUpdateEffect(() => {
+    if (reloadRequired && networksInfo) {
+      // first chain is added, so set that as the selected network
+      setChainName(Object.keys(networksInfo)[0]);
+    }
+  }, [reloadRequired, networksInfo]);
+
   return (
     <>
       <Flex
@@ -202,7 +231,7 @@ function App() {
         </Heading>
         <Spacer flex="1" />
       </Flex>
-      <Container mt="0.4rem" alignItems={"center"}>
+      <Container mt="0.4rem" pb="1rem" alignItems={"center"}>
         {!isSettingsOpen ? (
           <>
             <Flex>
@@ -269,9 +298,16 @@ function App() {
                 variant="filled"
                 rounded="lg"
                 _hover={{ cursor: "pointer" }}
-                placeholder="Select Network"
+                placeholder={
+                  networksInfo && Object.keys(networksInfo).length > 0
+                    ? undefined
+                    : "Select Network"
+                }
                 value={chainName}
                 onChange={(e) => {
+                  if (!chainName) {
+                    setReloadRequired(true);
+                  }
                   setChainName(e.target.value);
                 }}
               >
@@ -283,6 +319,29 @@ function App() {
                   ))}
               </Select>
             </Center>
+            {reloadRequired && (
+              <Alert mt="1.5rem" status="warning" rounded="lg">
+                <AlertIcon />
+                <AlertTitle fontSize="md">Reload current page</AlertTitle>
+                <Spacer />
+                <AlertDescription>
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      const tab = await currentTab();
+                      const url = tab.url!;
+                      // refresh retains cache and injected doesn't work
+                      // so doing like this:
+                      chrome.tabs.create({ url });
+                      chrome.tabs.remove(tab.id!);
+                      setReloadRequired(false);
+                    }}
+                  >
+                    Reload
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
           </>
         ) : (
           <Settings close={() => setIsSettingsOpen(false)} />

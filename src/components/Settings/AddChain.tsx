@@ -16,7 +16,7 @@ import { useNetworks } from "@/contexts/NetworksContext";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 function AddChain({ back }: { back: () => void }) {
-  const { networksInfo, setNetworksInfo } = useNetworks();
+  const { networksInfo, setNetworksInfo, setReloadRequired } = useNetworks();
 
   const [chainName, setChainName] = useState<string>();
   const [chainId, setChainId] = useState<string>();
@@ -33,6 +33,11 @@ function AddChain({ back }: { back: () => void }) {
       } else {
         setNetworksInfo((_networksInfo) => {
           back();
+
+          if (!_networksInfo || Object.keys(_networksInfo).length === 0) {
+            setReloadRequired(true);
+          }
+
           return {
             ..._networksInfo,
             [chainName]: {
