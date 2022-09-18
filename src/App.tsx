@@ -103,6 +103,10 @@ function App() {
 
   useEffect(() => {
     const init = async () => {
+      let _address: string | undefined = undefined;
+      let _displayAddress: string | undefined = undefined;
+      let _chainName: string | undefined = undefined;
+
       const {
         displayAddress: storedDisplayAddress,
         address: storedAddress,
@@ -121,17 +125,16 @@ function App() {
       };
 
       if (storedDisplayAddress) {
-        setDisplayAddress(storedDisplayAddress);
+        _displayAddress = storedDisplayAddress;
       }
 
-      const _address =
+      _address =
         storedAddress && storedAddress.length > 0
           ? storedAddress
           : "0x0000000000000000000000000000000000000000";
 
-      setAddress(_address);
       if (storedChainName) {
-        setChainName(storedChainName);
+        _chainName = storedChainName;
       }
       setIsEnabled(storedIsEnabled ?? true);
 
@@ -150,13 +153,21 @@ function App() {
         }) => {
           if (store.address && store.address.length > 0) {
             setAddress(store.address);
+          } else if (_address) {
+            setAddress(_address);
           }
+
           if (store.displayAddress && store.displayAddress.length > 0) {
             setDisplayAddress(store.displayAddress);
+          } else if (_displayAddress) {
+            setDisplayAddress(_displayAddress);
           }
+
           if (store.chainName && store.chainName.length > 0) {
             setChainName(store.chainName);
             setIsInjected(true);
+          } else if (_chainName) {
+            setChainName(_chainName);
           }
         }
       );
@@ -173,12 +184,6 @@ function App() {
         isEnabled,
       });
     }
-
-    console.log({
-      isEnabled,
-      chainName,
-      isInjected,
-    });
 
     if (isEnabled && chainName && !isInjected) {
       setReloadRequired(true);
