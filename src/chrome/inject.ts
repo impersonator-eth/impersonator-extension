@@ -1,5 +1,11 @@
 import { NetworksInfo } from "../types";
 
+let store = {
+  address: "",
+  displayAddress: "",
+  chainName: "",
+};
+
 const init = async () => {
   const { isEnabled } = (await chrome.storage.sync.get("isEnabled")) as {
     isEnabled: boolean | undefined;
@@ -19,6 +25,11 @@ const init = async () => {
       const { address } = (await chrome.storage.sync.get("address")) as {
         address: string | undefined;
       };
+      const { displayAddress } = (await chrome.storage.sync.get(
+        "displayAddress"
+      )) as {
+        displayAddress: string | undefined;
+      };
       let { chainName } = (await chrome.storage.sync.get("chainName")) as {
         chainName: string | undefined;
       };
@@ -26,7 +37,19 @@ const init = async () => {
         "networksInfo"
       )) as { networksInfo: NetworksInfo | undefined };
 
-      if (networksInfo && chainName && networksInfo[chainName]) {
+      if (
+        networksInfo &&
+        chainName &&
+        networksInfo[chainName] &&
+        address &&
+        displayAddress
+      ) {
+        store = {
+          address,
+          displayAddress,
+          chainName,
+        };
+
         window.postMessage(
           {
             type: "init",
@@ -49,7 +72,31 @@ const init = async () => {
 };
 
 // Receive messages from popup.js and forward it to the injected code (impersonator.ts)
-chrome.runtime.onMessage.addListener((msgObj) => {
+chrome.runtime.onMessage.addListener((msgObj, sender, sendResponse) => {
+  if (msgObj.type) {
+    switch (msgObj.type) {
+      case "setAddress": {
+        const address = msgObj.msg.address as string;
+        const displayAddress = msgObj.msg.displayAddress as string;
+
+        store.address = address;
+        store.displayAddress = displayAddress;
+        break;
+      }
+      case "setChainId": {
+        const chainName = msgObj.msg.chainName as string;
+
+        store.chainName = chainName;
+        break;
+      }
+      case "getInfo": {
+        sendResponse(store);
+
+        break;
+      }
+    }
+  }
+
   window.postMessage(msgObj, "*");
 });
 
@@ -66,7 +113,7 @@ window.addEventListener("message", async (e) => {
 
   switch (e.data.type) {
     case "i_setChainId": {
-      const chainId = e.data.msg.chainId;
+      const chainId = e.data.msg.chainId as number;
       const { networksInfo } = (await chrome.storage.sync.get(
         "networksInfo"
       )) as { networksInfo: NetworksInfo | undefined };
@@ -76,9 +123,11 @@ window.addEventListener("message", async (e) => {
       }
 
       let rpcUrl: string | undefined;
-      for (const chainName of Object.keys(networksInfo)) {
-        if (networksInfo[chainName].chainId === chainId) {
-          rpcUrl = networksInfo[chainName].rpcUrl;
+      let chainName: string;
+      for (const _chainName of Object.keys(networksInfo)) {
+        if (networksInfo[_chainName].chainId === chainId) {
+          rpcUrl = networksInfo[_chainName].rpcUrl;
+          chainName = _chainName;
           break;
         }
       }
@@ -86,7 +135,9 @@ window.addEventListener("message", async (e) => {
       if (!rpcUrl) {
         break;
       }
-      // send message to setChainId with RPC
+
+      store.chainName = chainName!;
+      // send message to setChainId with RPC, in impersonator.ts
       window.postMessage(
         {
           type: "setChainId",

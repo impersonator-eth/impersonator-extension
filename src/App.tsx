@@ -81,7 +81,7 @@ function App() {
       // send msg to content_script (inject.ts)
       chrome.tabs.sendMessage(tab.id!, {
         type: "setAddress",
-        msg: { address: _address },
+        msg: { address: _address, displayAddress },
       });
 
       // save to browser storage
@@ -129,6 +129,25 @@ function App() {
         setChainName(storedChainName);
       }
       setIsEnabled(storedIsEnabled ?? true);
+
+      // fetch `store` from content_script (inject.ts) if provider already injected
+      // in this current tab, set address & chain
+      const tab = await currentTab();
+      chrome.tabs.sendMessage(
+        tab.id!,
+        {
+          type: "getInfo",
+        },
+        (store: {
+          address: string;
+          displayAddress: string;
+          chainName: string;
+        }) => {
+          setAddress(store.address);
+          setDisplayAddress(store.displayAddress);
+          setChainName(store.chainName);
+        }
+      );
     };
 
     if (chrome.storage) {
@@ -153,7 +172,7 @@ function App() {
         // send msg to content_script (inject.ts)
         chrome.tabs.sendMessage(tab.id!, {
           type: "setChainId",
-          msg: { chainId, rpcUrl: networksInfo[chainName].rpcUrl },
+          msg: { chainName, chainId, rpcUrl: networksInfo[chainName].rpcUrl },
         });
 
         // save to browser storage

@@ -13,16 +13,16 @@ class ImpersonatorProvider extends EventEmitter {
   isImpersonator = true;
   isMetaMask = true;
 
-  address: string;
+  private address: string;
   private provider: Provider;
   private chainId: number;
 
-  constructor(chainId: number, rpcUrl: string, address?: string) {
+  constructor(chainId: number, rpcUrl: string, address: string) {
     super();
 
     this.provider = new StaticJsonRpcProvider(rpcUrl);
     this.chainId = chainId;
-    this.address = address && address.length > 0 ? address : DEFAULT_ADDRESS;
+    this.address = address;
   }
 
   setAddress = (address: string) => {
@@ -192,6 +192,7 @@ class ImpersonatorProvider extends EventEmitter {
   }
 }
 
+// receive from content_script (inject.ts)
 window.addEventListener("message", (e: any) => {
   // only accept messages from us
   if (e.source !== window) {
@@ -204,7 +205,7 @@ window.addEventListener("message", (e: any) => {
 
   switch (e.data.type) {
     case "init": {
-      const address = e.data.msg.address as string | undefined;
+      const address = e.data.msg.address as string;
       const chainId = e.data.msg.chainId as number;
       const rpcUrl = e.data.msg.rpcUrl as string;
       try {
@@ -223,13 +224,16 @@ window.addEventListener("message", (e: any) => {
     }
     case "setAddress": {
       const address = e.data.msg.address as string;
-      (window as Window).ethereum.setAddress(address);
+      ((window as Window).ethereum as ImpersonatorProvider).setAddress(address);
       break;
     }
     case "setChainId": {
       const chainId = e.data.msg.chainId as number;
       const rpcUrl = e.data.msg.rpcUrl as string;
-      (window as Window).ethereum.setChainId(chainId, rpcUrl);
+      ((window as Window).ethereum as ImpersonatorProvider).setChainId(
+        chainId,
+        rpcUrl
+      );
       break;
     }
   }
