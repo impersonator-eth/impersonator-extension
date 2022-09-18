@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
+import { useUpdateEffect } from "@chakra-ui/react";
 import { NetworksInfo } from "@/types";
 
 type NetworkContextType = {
@@ -31,16 +32,14 @@ export const NetworksProvider: React.FunctionComponent = ({ children }) => {
     fetch();
   }, []);
 
-  useEffect(() => {
+  useUpdateEffect(() => {
     const saveToBrowser = async () => {
       await chrome.storage.sync.set({
         networksInfo,
       });
     };
 
-    if (networksInfo) {
-      saveToBrowser();
-    }
+    saveToBrowser();
   }, [networksInfo]);
 
   return (

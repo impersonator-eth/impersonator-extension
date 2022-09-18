@@ -58,12 +58,14 @@ function EditChain({
 
   const deleteChain = () => {
     setNetworksInfo((_networksInfo) => {
-      if (_networksInfo) {
-        delete _networksInfo[chainName];
+      // doing this to create a deep copy
+      const copy = { ..._networksInfo };
+      if (copy) {
+        delete copy[chainName];
       }
 
       back();
-      return _networksInfo;
+      return copy;
     });
   };
 
