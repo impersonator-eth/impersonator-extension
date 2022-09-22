@@ -42,7 +42,6 @@ class ImpersonatorProvider extends EventEmitter {
   }
 
   async send(method: string, params?: Array<any>): Promise<any> {
-    console.log({ method, params });
     const throwUnsupported = (message: string): never => {
       return logger.throwError(message, Logger.errors.UNSUPPORTED_OPERATION, {
         method: method,
