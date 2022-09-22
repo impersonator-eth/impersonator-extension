@@ -60,5 +60,5 @@ Impersonator injects into the dapps just like Metamask, but gives you the freedo
 6. You can now open any dapp and connect wallet as Metamask. The dapp would detect your custom address and network.
 
 <br />
-⭐ Unique feature that differentiates it from other wallets: <b>You can have different address & chain injected in different browser tabs at the same time! </b><br />
+⭐ Unique feature that differentiates it from other wallets: <b>You can have different address & chain injected in different browser tabs at the same time! </b><br /><br />
 So in one tab you might have Uniswap connected to <code>Polygon</code> with <code>apoorv.eth</code> and in another one you can have Sushiswap connected to <code>Ethereum Mainnet</code> with <code>vitalik.eth</code>
