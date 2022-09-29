@@ -24,7 +24,7 @@
       "all_frames": true
     }
   ],
-  "permissions": ["activeTab", "tabs", "storage"],
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["https://*/*", "http://*/*"],
   "web_accessible_resources": [
     {
