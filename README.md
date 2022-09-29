@@ -14,7 +14,7 @@ Impersonator injects into the dapps just like Metamask, but gives you the freedo
 
   <li>Extract the zip file</li>
   <li> 
-    <b>NOTE:</b> Extension should not be installed along with Metamask, here are 3 ifferent ways to avoid it:<br/>
+    <b>NOTE:</b> Extension should not be installed along with Metamask, here are 3 different ways to avoid it:<br/>
     <ol type="a">
       <li>
         Create a new browser profile <br />
