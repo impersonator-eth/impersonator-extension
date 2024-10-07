@@ -1,0 +1,57 @@
+name: Build & Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build web extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: yarn
+      - run: yarn install
+      - run: echo "VITE_INLINE_RUNTIME_CHUNK=false" > .env
+      - run: yarn build
+      - name: archive source code
+        run: |
+          git archive --output source.zip HEAD -- ":!.github"
+          unzip -l source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source
+          path: source.zip
+
+  firefox:
+    name: Submit (Firefox)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: sign and submit extension
+        run: web-ext sign --source-dir build --channel listed --upload-source-code source/source.zip
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+
+  chrome:
+    name: Submit (Chrome)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: npx chrome-webstore-upload-cli
+        working-directory: build
+        env:
+          EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
