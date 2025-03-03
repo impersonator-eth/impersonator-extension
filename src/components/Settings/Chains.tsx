@@ -14,6 +14,7 @@ import { useNetworks } from "@/contexts/NetworksContext";
 import { NetworksInfo } from "@/types";
 import AddChain from "./AddChain";
 import EditChain from "./EditChain";
+import EditSimulation from "./EditSimulation";
 
 function Chain({
   chainName,
@@ -89,6 +90,9 @@ function Chains({ close }: { close: () => void }) {
             onClick={() => setTab(<AddChain back={() => setTab(undefined)} />)}
           >
             Add Chain
+          </Button>
+          <Button onClick={() => setTab(<EditSimulation back={() => setTab(undefined)} />)}>
+            Edit Simulation Settings
           </Button>
         </Stack>
       </Center>
