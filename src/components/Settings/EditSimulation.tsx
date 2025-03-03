@@ -41,6 +41,12 @@ function EditSimulation({ back }: { back: () => void }) {
     setIsBtnLoading(false);
   };
 
+  const deleteSettings = () => {
+    setReloadRequired(true);
+    setSimulationInfo(undefined);
+    back();
+  }
+
   useEffect(() => {
     if (simulationInfo) {
       setProjectSlug(simulationInfo.projectSlug);
@@ -101,16 +107,29 @@ function EditSimulation({ back }: { back: () => void }) {
             }}
             isInvalid={!accessKey}
           />
-          <Center>
-            <Button
-              onClick={() => saveSettings()}
-              isLoading={isBtnLoading}
-              disabled={
-                !accountSlug || !projectSlug || !accessKey || isBtnLoading
-              }
-            >
-              Save Simulation Settings
-            </Button>
+                    <Center>
+            <HStack spacing="3">
+              <Button
+                size="sm"
+                maxW="6rem"
+                colorScheme="blue"
+                onClick={() => saveSettings()}
+                isLoading={isBtnLoading}
+                disabled={
+                  !accountSlug || !projectSlug || !accessKey || isBtnLoading
+                }
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                maxW="6rem"
+                colorScheme="red"
+                onClick={() => deleteSettings()}
+              >
+                Delete
+              </Button>
+            </HStack>
           </Center>
         </Stack>
       </Box>
