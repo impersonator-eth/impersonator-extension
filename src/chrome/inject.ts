@@ -1,4 +1,4 @@
-import { NetworksInfo } from "../types";
+import { NetworksInfo, SimulationInfo } from "../types";
 
 let store = {
   address: "",
@@ -36,6 +36,9 @@ const init = async () => {
       const { networksInfo } = (await chrome.storage.sync.get(
         "networksInfo"
       )) as { networksInfo: NetworksInfo | undefined };
+      const { simulationInfo } = (await chrome.storage.sync.get(
+        "simulationInfo"
+      )) as { simulationInfo: SimulationInfo | undefined };
 
       if (
         networksInfo &&
@@ -57,6 +60,7 @@ const init = async () => {
               address,
               chainId: networksInfo[chainName].chainId,
               rpcUrl: networksInfo[chainName].rpcUrl,
+              simulationInfo
             },
           },
           "*"

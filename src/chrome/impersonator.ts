@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { hexValue } from "@ethersproject/bytes";
 import { Logger } from "@ethersproject/logger";
+import { SimulationInfo } from "@/types";
 
 const logger = new Logger("ethers/5.7.0");
 
@@ -14,13 +15,31 @@ class ImpersonatorProvider extends EventEmitter {
   private address: string;
   private provider: StaticJsonRpcProvider;
   private chainId: number;
+  private simulationInfo?: SimulationInfo;
 
-  constructor(chainId: number, rpcUrl: string, address: string) {
+  constructor(chainId: number, rpcUrl: string, address: string, simulationInfo?: SimulationInfo) {
     super();
 
     this.provider = new StaticJsonRpcProvider(rpcUrl);
     this.chainId = chainId;
     this.address = address;
+    this.simulationInfo = simulationInfo;
+  }
+
+  getSimulationEndpoint = () => {
+    if (!this.simulationInfo) {
+      throw new Error("Simulation info not found");
+    }
+
+    return `https://api.tenderly.co/api/v1/account/${this.simulationInfo.accountSlug}/project/${this.simulationInfo.projectSlug}/simulate`;
+  }
+
+  getSimulationTxLink = (id: string) => {
+    if (!this.simulationInfo) {
+      throw new Error("Simulation info not found");
+    }
+
+    return `https://dashboard.tenderly.co/${this.simulationInfo.accountSlug}/${this.simulationInfo.projectSlug}/simulator/${id}`;
   }
 
   setAddress = (address: string) => {
@@ -123,6 +142,38 @@ class ImpersonatorProvider extends EventEmitter {
         return throwUnsupported("personal_sign not supported");
       }
       case "eth_sendTransaction": {
+        if (this.simulationInfo) {
+          const txParams = (params ?? [{}])[0];
+          const tx = {
+            from: txParams.from ?? this.address,
+            to: txParams.to,
+            input: txParams.data ?? "0x",
+            gas: txParams.gas ? parseInt(txParams.gas, 16) : 8_000_000,
+            gas_price: "0",
+            value: txParams.value ? parseInt(txParams.value, 16).toString() : "0",
+            network_id: this.chainId.toString(),
+            save: true,
+            save_if_fails: true
+          }
+
+          const result = await fetch(this.getSimulationEndpoint(), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Access-Key": this.simulationInfo.accessKey,
+            },
+            body: JSON.stringify(tx),
+          });
+          const json = await result.json();
+          const id = json.simulation.id;
+          // const txHash = json.transaction.hash;
+
+          const link = this.getSimulationTxLink(id);
+          window.open(link, "_blank");
+
+          // return txHash;
+          // Could return txHash, but most dApps will just end up cycling eth_getTransactionHash. Its not useful to return it.
+        }
         break;
       }
       // unchanged from Eip1193Bridge
@@ -240,11 +291,15 @@ window.addEventListener("message", (e: any) => {
       const address = e.data.msg.address as string;
       const chainId = e.data.msg.chainId as number;
       const rpcUrl = e.data.msg.rpcUrl as string;
+
+      const simulationInfo = e.data.msg.simulationInfo as SimulationInfo | undefined;
+
       try {
         const impersonatedProvider = new ImpersonatorProvider(
           chainId,
           rpcUrl,
-          address
+          address,
+          simulationInfo
         );
 
         (window as Window).ethereum = impersonatedProvider;
